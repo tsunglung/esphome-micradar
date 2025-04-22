@@ -1,0 +1,131 @@
+substitutions:
+  devicename: esp32-micradar
+  upper_devicename: ESP32 Radar
+
+esphome:
+  name: ${devicename}
+  friendly_name: ${upper_devicename}
+  comment: ${upper_devicename}
+  name_add_mac_suffix: false
+
+esp32:
+  board: m5stack-atom
+
+external_components:
+  - source: github://tsunglung/esphome-micradar@master
+    components: [ micradar ]
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  #fast_connect: true
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${devicename}
+    password: "12345678"
+
+captive_portal:
+
+#web_server:
+
+# Enable logging
+logger:
+#  level: VERY_VERBOSE
+
+# Enable Home Assistant API
+api:
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+
+
+uart:
+ rx_pin: GPIO21
+ tx_pin: GPIO25
+ baud_rate: 115200
+
+micradar:
+  model: "R60AMP1"
+
+binary_sensor:
+  - platform: status
+    name: "Status"
+  - platform: micradar
+    has_target:
+      name: "Presence Information"
+
+button:
+  - platform: safe_mode
+    name: Safe Mode Boot
+    entity_category: diagnostic
+  - platform: restart
+    name: "Restart"
+
+light:
+  - platform: esp32_rmt_led_strip
+    chipset: WS2812
+    pin: GPIO27
+    num_leds: 3
+    rgb_order: GRB
+    rmt_channel: 0
+    name: "RGB LED"
+
+sensor:
+  - platform: uptime
+    name: Uptime
+    filters:
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    accuracy_decimals: 1
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    id: wifisignal
+    update_interval: 60s
+
+  - platform: micradar
+    movement_signs:
+      name: "Body Movement Parameter"
+    target_1:
+      x:
+        name: Target-1 X
+      y:
+        name: Target-1 Y
+    target_2:
+      x:
+        name: Target-2 X
+      y:
+        name: Target-2 Y
+    target_3:
+      x:
+        name: Target-3 X
+      y:
+        name: Target-3 Y
+
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+
+  - platform: micradar
+    equipment_state:
+      name: "Equipment State"
+    product_model:
+      name: "Product Model"
+    product_id:
+      name: "Product ID"
+    hardware_model:
+      name: "Hardware Model"
+    hardware_version:
+      name: "Hardware Version"
+    keep_away:
+      name: "Active Reporting Of Proximity"
+    motion_status:
+      name: "Motion Information"
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
